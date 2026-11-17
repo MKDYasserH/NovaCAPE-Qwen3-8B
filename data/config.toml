@@ -1,0 +1,27 @@
+# "local": small sample downloaded to this machine. "remote": full dataset on Modal.
+run_mode = "local"
+app_name = "nova-data-loader"
+volume_name = "nova-data"
+data_dir = "/data"
+log_every = 25
+
+# Used when run_mode = "local".
+[local]
+data_dir = "downloads"
+jobs_per_source = 1
+
+[[sources]]
+kind = "qa"
+repo = "Contrastive-LM/CLM-v0.1-Pretrain-Nemotron"
+revision = "05ca7d05c043350326c5e86c589b9542962747b4"
+extensions = [".npy", ".parquet"]
+group_by_chunk = true
+
+[[sources]]
+kind = "neg"
+repo = "jackyk02/nemotron_dqa_qwen3_8b_neg_embeddings"
+extensions = [".npy", ".parquet", "metadata.json"]
+
+[heads]
+repo = "jackyk02/qwen3_8b_head"
+files = ["qwen3_8b_pretrained_head.pt", "qwen3_8b_midtrained_head.pt", "qwen3_8b_posttrained_head.pt"]

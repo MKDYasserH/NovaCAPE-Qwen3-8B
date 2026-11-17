@@ -6,4 +6,6 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "huggingface-hub>=2.4.0",
+    "modal>=1.6.4",
+    "pydantic>=2.14.3",
 ]
