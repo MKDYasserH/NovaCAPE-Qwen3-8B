@@ -1,0 +1,83 @@
+# "local": run on this machine with the data in [local].data_dir. "remote": full run on a Modal GPU.
+run_mode = "local"
+app_name = "nova-train-heads"
+volume_name = "nova-data"
+data_dir = "/data"
+runs_dir = "runs"  # checkpoints and logs go to <data_dir>/runs/<stage>
+seed = 1234
+log_every_steps = 100
+min_improvement = 1e-4  # a validation score must beat the best by this much to count
+
+# Used when run_mode = "local". Needs a few training chunks and the held-out chunks downloaded.
+[local]
+data_dir = "downloads"
+batch_size = 256
+max_steps = 30
+
+[modal]
+gpu = "L40S"
+cpu = 32
+memory_mb = 256000  # pools of chunks are held in RAM (a chunk with hard negatives is ~10 GB)
+timeout_s = 86000
+max_retries = 4
+retry_delay_s = 30.0
+
+# 4096 is Qwen3-8B's hidden size; the published heads use width 1536 and project to 512.
+[head]
+input_dim = 4096
+width = 1536
+projection_dim = 512
+
+[loss]
+initial_temperature = 0.07  # CLIP's starting value
+max_logit_scale = 100.0  # CLIP's cap: 1 / temperature never goes above this
+
+[optimizer]
+weight_decay = 0.0
+grad_clip_norm = 1.0
+
+# Never trained on: the same chunks the authors held out.
+[held_out]
+general = [{ shard = "shard_05", index = 83 }, { shard = "shard_05", index = 84 }]
+hard_negatives = [{ shard = "shard_00", index = 28 }, { shard = "shard_00", index = 29 }]
+eval_batch_size = 1024  # each state is ranked against this many actions
+hard_negative_eval_rows = 4096  # rows per GPU pass; only affects memory
+
+# Stage 1: both heads from scratch, on every Q&A chunk.
+[pre]
+batch_size = 16384
+learning_rate = 0.00653  # 2e-3 * sqrt(1024 / width) * sqrt(batch_size / 1024)
+max_epochs = 16
+chunks_per_pool = 24
+pool_repeats = 3
+eval_every_steps = 1000
+full_eval_every_steps = 4000  # hard-negative eval is only for information here, so run it less often
+patience = 9  # evals in a row without improvement before stopping
+
+# Stage 2: start from pre, add hard negatives (only shard_00 has them).
+[mid]
+init_from_run = "pre"
+batch_size = 16384
+learning_rate = 0.001
+max_epochs = 8
+chunks_per_pool = 6
+pool_repeats = 1
+eval_every_steps = 42
+patience = 8
+
+# Stage 3: start from mid, train on agent steps while replaying some Q&A.
+[post]
+init_from_run = "mid"
+batch_size = 16384
+learning_rate = 0.001
+max_epochs = 8
+chunks_per_pool = 6
+pool_repeats = 1
+eval_every_steps = 25
+patience = 8
+learn_temperature = false  # the authors' mid and post checkpoints have the same scale
+
+[post.agent]
+qa_replay_fraction = 0.4  # share of each batch taken from Q&A, so the heads don't forget it
+states_dir = "agent/vec"
+actions_dir = "agent/vec"

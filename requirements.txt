@@ -1,3 +1,7 @@
 huggingface_hub
 modal
 pydantic
+numpy
+torch
+torchvision
+pyarrow
