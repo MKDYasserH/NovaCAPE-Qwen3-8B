@@ -1,0 +1,33 @@
+# "local": inspect_deepswe reads and downloads on this machine. run_deepswe needs a GPU and always runs on Modal.
+run_mode = "local"
+app_name = "nova-deepswe"
+volume_name = "nova-data"
+data_dir = "/data"
+runs_dir = "runs"  # where finetuning writes <stage>/best.pt; must match finetuning/config.toml
+
+# Used when run_mode = "local".
+[local]
+data_dir = "downloads"
+
+# Fine-tune a verifier head on passing DeepSWE steps, then pick the best of 4 rollouts on 38 held-out tasks.
+[deepswe]
+clm_repo_url = "https://github.com/Contrastive-LM/CLM.git"
+clm_commit = "d5f9ef0fd9bde185df0ceaad4f4ecc6cfe8c34f6"
+heads_repo = "Contrastive-LM/deepswe-clm-heads-8k"  # the authors' verifier: held-out task list and reference head
+eval_dataset = "tarsur385/deepswe-prm-embeddings-8k"  # public copy; the README's dataset returns 401
+authors_init_repo = "Contrastive-LM/CLM-v0.1-8B"
+authors_init_file = "CLM_v0.1-8B.pt"
+output_dir = "deepswe"
+min_reward = 0.5  # train only on steps of rollouts that passed
+# The settings stored in the authors' verifier head.
+batch_size = 512
+seed = 1234
+max_epochs = 20
+patience = 5
+# bon_eval.py: candidates per task, and how many final steps are averaged into a rollout's score.
+candidates = 4
+window = 12
+# What the authors' head records, printed next to ours as a check.
+expected_training_pairs = 22576
+expected_training_tasks = 66
+printed_chars = 2600  # per file shown by inspect_deepswe

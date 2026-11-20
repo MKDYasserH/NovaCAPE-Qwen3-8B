@@ -9,6 +9,8 @@ log_every = 25
 [local]
 data_dir = "downloads"
 jobs_per_source = 1
+agent_subsets = 2
+pairs_per_subset = 200
 
 [[sources]]
 kind = "qa"
@@ -25,3 +27,30 @@ extensions = [".npy", ".parquet", "metadata.json"]
 [heads]
 repo = "jackyk02/qwen3_8b_head"
 files = ["qwen3_8b_pretrained_head.pt", "qwen3_8b_midtrained_head.pt", "qwen3_8b_posttrained_head.pt"]
+
+# Agent recordings -> (state, action) text pairs, for post-training. data/load_agent_data.py
+[agent_pairs]
+app_name = "nova-agent-pairs"
+repo = "neulab/adp-v2"
+revision = "eb95b66ca30ef071d5e49495d5d780c29f9aef7b"
+recordings_glob = "raw/*full_std*.jsonl"
+vision_subsets = ["android_in_the_wild", "androidcontrol", "omniact", "screenagent", "llava_plus"]
+pairs_per_subset = 30000
+pairs_per_trajectory = 6
+min_actions = 2
+max_chars = 24000
+validation_percent = 3
+output_dir = "agent/pairs"
+
+# Text pairs -> Qwen3-8B embeddings, same recipe as the Q&A data. data/embed_agent.py
+[agent_embedding]
+app_name = "nova-agent-embedding"
+model_repo = "Qwen/Qwen3-8B"
+model_revision = "b968826d9c46dd6066d109eabc6255188de91218"
+model_dir = "qwen3-8b"
+output_dir = "agent/vec"  # must match [post.agent] in finetuning/config.toml
+max_model_len = 2048
+max_tokens = 2047
+state_char_budget = 16000
+texts_per_call = 4096
+gpu_memory_utilization = 0.85

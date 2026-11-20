@@ -14,6 +14,77 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Modal: build agent pairs",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "modal",
+            "args": ["run", "data/load_agent_data.py"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Modal: embed agent pairs",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "modal",
+            "args": ["run", "data/embed_agent.py"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Modal: pre-train heads",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "modal",
+            "args": ["run", "-m", "finetuning.pre_training_handler"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Modal: mid-train heads",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "modal",
+            "args": ["run", "-m", "finetuning.mid_training_handler"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Modal: post-train heads",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "modal",
+            "args": ["run", "-m", "finetuning.post_training_handler"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Modal: run DeepSWE (post head)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "modal",
+            "args": ["run", "--detach", "evaluation/deepswe.py::run_deepswe", "--init", "post"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Modal: inspect DeepSWE head",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "modal",
+            "args": ["run", "evaluation/deepswe.py::inspect_deepswe"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Training smoke test (fake data)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "finetuning.smoke_test",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Python Debugger: Current File",
             "type": "debugpy",
             "request": "launch",
