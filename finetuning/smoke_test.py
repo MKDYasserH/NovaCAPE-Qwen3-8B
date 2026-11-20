@@ -44,13 +44,13 @@ def write_chunk(data_dir: Path, chunk: ChunkId, with_hard_negatives: bool) -> No
 def write_agent_steps(data_dir: Path) -> None:
     agent_dir = data_dir / config.post.agent.states_dir
     agent_dir.mkdir(parents=True, exist_ok=True)
-    for name in ["config_a", "config_b"]:
+    for name in ["subset_a", "subset_b"]:
         np.save(agent_dir / f"{name}_q.npy", random_vectors(AGENT_STEPS_PER_FILE, DIMS.input_dim))
         np.save(agent_dir / f"{name}_a.npy", random_vectors(AGENT_STEPS_PER_FILE, DIMS.input_dim))
         meta = pa.table({
             "traj": [f"traj{row % 12}" for row in range(AGENT_STEPS_PER_FILE)],
             "split": ["val" if row % 3 == 0 else "train" for row in range(AGENT_STEPS_PER_FILE)],
-            "config": [name] * AGENT_STEPS_PER_FILE,
+            "subset": [name] * AGENT_STEPS_PER_FILE,
         })
         pq.write_table(meta, agent_dir / f"{name}_meta.parquet")
 

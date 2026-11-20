@@ -16,10 +16,8 @@ from pydantic import BaseModel
 from finetuning.chunks import hash_ids
 from finetuning.environment import IS_LOCAL, app, config, data_dir, gpu_function, reload_volume, stage_settings
 from finetuning.training_handler import Trainer
+from schemas.agent_data import VALIDATION_SPLIT
 from schemas.training import AgentDataSettings, EvalReport, PairArrays, StageRun, TrainingConfig
-
-VALIDATION_SPLIT = "val"  # value of the `split` column for held-out agent steps
-
 
 class AgentSteps(BaseModel):
     train: PairArrays
@@ -33,11 +31,11 @@ def load_agent_steps(data_dir: str, settings: AgentDataSettings) -> AgentSteps:
     if not meta_files:
         raise FileNotFoundError(f"no agent steps under {states_dir}")
     prefixes = [path.name.removesuffix("_meta.parquet") for path in meta_files]
-    meta = pa.concat_tables([pq.read_table(path, columns=["traj", "split", "config"]) for path in meta_files])
+    meta = pa.concat_tables([pq.read_table(path, columns=["traj", "split", "subset"]) for path in meta_files])
     # Steps from one trajectory are masked from each other, like pairs from one document.
-    run_configs = meta.column("config").to_pylist()
+    subsets = meta.column("subset").to_pylist()
     trajectories = meta.column("traj").to_pylist()
-    trajectory_ids = [run_config + trajectory for run_config, trajectory in zip(run_configs, trajectories)]
+    trajectory_ids = [subset + trajectory for subset, trajectory in zip(subsets, trajectories)]
     steps = PairArrays(
         states=np.concatenate([np.load(states_dir / f"{prefix}_q.npy") for prefix in prefixes]),
         actions=np.concatenate([np.load(actions_dir / f"{prefix}_a.npy") for prefix in prefixes]),
@@ -54,6 +52,11 @@ class PostTrainer(Trainer):
         self.agent = load_agent_steps(run.data_dir, self.agent_settings)
         print(f"agent: {self.agent.train.num_rows} train steps, {self.agent.validation.num_rows} validation steps", flush=True)
 
+    @property
+    def uses_hard_negatives(self) -> bool:
+        """Replay from the chunks with hard negatives (shard_00), keeping the negatives in the loss."""
+        return self.config.post.agent.replay_hard_negatives
+
     @contextmanager
     def epoch_batches(self) -> Iterator[Iterable[PairArrays]]:
         qa_rows = int(self.settings.batch_size * self.agent_settings.qa_replay_fraction)
@@ -65,7 +68,11 @@ class PostTrainer(Trainer):
         """Fill the rest of the batch with agent steps, sampled with replacement."""
         agent_rows = self.settings.batch_size - qa_batch.num_rows
         rows = np.sort(rng.integers(0, self.agent.train.num_rows, agent_rows))
-        return PairArrays.concat([qa_batch, self.agent.train.take(rows)])
+        agent_batch = self.agent.train.take(rows)
+        if qa_batch.hard_negatives is not None:
+            # Agent steps have no hard negatives: their slots are empty, so the loss skips them.
+            agent_batch = agent_batch.with_empty_negatives(slots=qa_batch.hard_negatives.shape[1])
+        return PairArrays.concat([qa_batch, agent_batch])
 
     def evaluate(self, full_eval: bool) -> EvalReport:
         report = super().evaluate(full_eval)

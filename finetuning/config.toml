@@ -53,6 +53,7 @@ pool_repeats = 3
 eval_every_steps = 1000
 full_eval_every_steps = 4000  # hard-negative eval is only for information here, so run it less often
 patience = 9  # evals in a row without improvement before stopping
+max_steps = 30000  # the original README run stops here, before the 16 epochs
 
 # Stage 2: start from pre, add hard negatives (only shard_00 has them).
 [mid]
@@ -66,11 +67,13 @@ eval_every_steps = 42
 patience = 8
 
 # Stage 3: start from mid, train on agent steps while replaying some Q&A.
+# lr and max_steps are the original README run's overrides, not its code defaults (0.001, no cap).
 [post]
 init_from_run = "mid"
 batch_size = 16384
-learning_rate = 0.001
+learning_rate = 0.0003
 max_epochs = 8
+max_steps = 400
 chunks_per_pool = 6
 pool_repeats = 1
 eval_every_steps = 25
@@ -79,5 +82,7 @@ learn_temperature = false  # the authors' mid and post checkpoints have the same
 
 [post.agent]
 qa_replay_fraction = 0.4  # share of each batch taken from Q&A, so the heads don't forget it
+# Replay the shard_00 chunks with their hard negatives. Plain replay dropped tricky Q&A from 69.0% to 59.8%.
+replay_hard_negatives = true
 states_dir = "agent/vec"
 actions_dir = "agent/vec"

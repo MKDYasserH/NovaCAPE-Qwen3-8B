@@ -74,6 +74,7 @@ class StageSettings(BaseModel):
 
 class AgentDataSettings(BaseModel):
     qa_replay_fraction: float
+    replay_hard_negatives: bool
     states_dir: str
     actions_dir: str
 
@@ -166,6 +167,13 @@ class PairArrays(BaseModel):
             hard_negatives=_join_optional([part.hard_negatives for part in parts]),
             negative_counts=_join_optional([part.negative_counts for part in parts]),
         )
+
+    def with_empty_negatives(self, slots: int) -> "PairArrays":
+        """Same rows, with `slots` hard-negative slots that are all empty, so they can join a batch that has some."""
+        return self.model_copy(update={
+            "hard_negatives": np.zeros((self.num_rows, slots, self.actions.shape[1]), dtype=self.actions.dtype),
+            "negative_counts": np.zeros(self.num_rows, dtype=np.int64),
+        })
 
     def to_device(self, device: torch.device) -> PairTensors:
         # Copy float16 to the GPU first, then upcast there: half the bytes to transfer.
