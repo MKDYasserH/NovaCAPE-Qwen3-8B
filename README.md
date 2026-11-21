@@ -1,6 +1,6 @@
 # System One Model from Scratch
 
-A rebuild of [CLM-8B](https://contrastive-lm.notion.site), an open System One model from Stanford and NVIDIA Research, made for a live workshop by [Dr. Raj Dandekar](https://vizuara.ai) and the team at Vizuara AI Labs.
+NovaCAPE-Qwen3-8B is a decision model based on [CLM-8B](https://contrastive-lm.notion.site).
 
 A System One model does not write text. You give it a situation and a list of options, and it returns a probability for each option in one pass. [Jev](https://typesafe.ai) made the idea popular but is closed source, so this repo builds an open equivalent.
 
@@ -91,7 +91,7 @@ Settings for all three are in `serving/config.toml`: where the heads come from, 
 
 The CLM team released the CLM-8B weights, described all three training stages, and published a trainer for fine-tuning the projection heads on new data, including DeepSWE traces. The official repository does not include the end-to-end scripts used to pre-train, mid-train and post-train the released CLM-8B checkpoint. [CLM release](https://github.com/Contrastive-LM/CLM/tree/d5f9ef0fd9bde185df0ceaad4f4ecc6cfe8c34f6) · [Fine-tuning script](https://github.com/Contrastive-LM/CLM/blob/d5f9ef0fd9bde185df0ceaad4f4ecc6cfe8c34f6/train/finetune.py)
 
-This project builds on Vizuara’s reconstruction and the settings stored in the authors’ checkpoints. The table below lists the training scripts and recipes used here. [Vizuara reconstruction](https://github.com/VizuaraAI/system-one-from-scratch) · [CLM head checkpoints](https://huggingface.co/jackyk02/qwen3_8b_head)
+The pre-training and mid-training recipes use settings from the authors’ checkpoints. [CLM head checkpoints](https://huggingface.co/jackyk02/qwen3_8b_head)
 
 | Stage | Data | Recipe | Script |
 |---|---|---|---|
@@ -153,9 +153,8 @@ Both heads are on `nova-data` under `runs/<name>/best.pt`. The terminal head sta
 | Terminal-agent post-training | `post-terminal-870f73d383` | 70.75% | 70.67% | 30.2 |
 | Coding specialist | `post-swe-ecc0c007a5` | 70.76% | 74.01% | 28.8 |
 | CLM | Released post head | 68.63% | 69.42% | 31.0 |
-| Vizuara | Workshop report | 68.99% | Unreported | 30.6 |
 
-The specialist used labeled SWE-bench training issues. Its development split selected step 50, and the publisher's separate 95-issue split supplied the test result. The CLM control used its released post head on that test. DeepSWE used seeds 1234, 1, 2, 3 and 4 on the same 38 tasks. The local mid head also averaged 30.2 with the same verifier. The experimental outcome adjustment lowered the terminal head's average to 29.4. [Machine-readable results](evaluation/results/post_training_2026-11-21.json) · [Workshop reference](https://github.com/VizuaraAI/system-one-from-scratch/blob/main/results/results.json)
+The specialist used labeled SWE-bench training issues. Its development split selected step 50, and the publisher's separate 95-issue split supplied the test result. The CLM control used its released post head on that test. DeepSWE used seeds 1234, 1, 2, 3 and 4 on the same 38 tasks. The local mid head also averaged 30.2 with the same verifier. The experimental outcome adjustment lowered the terminal head's average to 29.4. [Machine-readable results](evaluation/results/post_training_2026-11-21.json)
 
 ### Setup
 
