@@ -1,7 +1,8 @@
 # "local": inspect_deepswe reads and downloads on this machine. run_deepswe needs a GPU and always runs on Modal.
-run_mode = "local"
+run_mode = "remote"
 app_name = "nova-deepswe"
 volume_name = "nova-data"
+hf_secret_name = "huggingface"  # Modal secret holding HF_TOKEN: modal secret create huggingface HF_TOKEN=...
 data_dir = "/data"
 runs_dir = "runs"  # where finetuning writes <stage>/best.pt; must match finetuning/config.toml
 

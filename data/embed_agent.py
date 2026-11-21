@@ -42,6 +42,7 @@ image = (
     .add_local_python_source("schemas")
 )
 volume = modal.Volume.from_name(config.volume_name, create_if_missing=True, version=2)
+hf_secret = modal.Secret.from_name(config.hf_secret_name)  # sets HF_TOKEN, which huggingface_hub reads itself
 app = modal.App(settings.app_name)
 
 chat_messages = TypeAdapter(list[ChatMessage])
@@ -153,7 +154,7 @@ def download_model() -> None:
     volume.commit()
 
 
-@app.function(image=image, volumes={config.data_dir: volume}, timeout=14000)
+@app.function(image=image, volumes={config.data_dir: volume}, secrets=[hf_secret], timeout=14000)
 def orchestrate():
     download_model()
     subsets = sorted(path.stem for path in pairs_dir.glob("*.parquet"))

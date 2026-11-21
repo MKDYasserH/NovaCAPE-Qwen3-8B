@@ -42,6 +42,7 @@ image = (
     .add_local_python_source("schemas")
 )
 volume = modal.Volume.from_name(config.volume_name, create_if_missing=True, version=2)
+hf_secret = modal.Secret.from_name(config.hf_secret_name)  # sets HF_TOKEN, which huggingface_hub reads itself
 app = modal.App(settings.app_name)
 
 revision = f"@{settings.revision}" if settings.revision else ""
@@ -139,7 +140,7 @@ def write_pairs(pairs: list[AgentPair], destination: Path) -> None:
     os.replace(partial, destination)
 
 
-@app.function(image=image, volumes={config.data_dir: volume}, cpu=2, memory=8192, timeout=7200, retries=modal.Retries(max_retries=3, initial_delay=30.0), max_containers=24)
+@app.function(image=image, volumes={config.data_dir: volume}, secrets=[hf_secret], cpu=2, memory=8192, timeout=7200, retries=modal.Retries(max_retries=3, initial_delay=30.0), max_containers=24)
 def build_subset(subset: str) -> SubsetReport:
     destination = output_path(subset)
     if destination.exists():
@@ -163,7 +164,7 @@ def build_locally(subsets: list[str]) -> Iterator[SubsetReport | Exception]:
             yield error
 
 
-@app.function(image=image, volumes={config.data_dir: volume}, timeout=14000)
+@app.function(image=image, volumes={config.data_dir: volume}, secrets=[hf_secret], timeout=14000)
 def orchestrate():
     subsets = list_subsets()
     if IS_LOCAL:

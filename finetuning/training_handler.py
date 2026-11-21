@@ -10,7 +10,8 @@ import torch
 
 from finetuning.batches import BatchStream
 from finetuning.chunks import ChunkStore
-from finetuning.environment import commit_volume, pick_device
+from finetuning.devices import pick_device
+from finetuning.environment import commit_volume
 from finetuning.evaluation import Evaluator
 from finetuning.heads import ContrastiveHeads
 from finetuning.loss import contrastive_loss, embed_batch

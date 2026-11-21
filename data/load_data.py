@@ -30,6 +30,7 @@ image = (
     .add_local_python_source("schemas")
 )
 volume = modal.Volume.from_name(config.volume_name, create_if_missing=True, version=2)
+hf_secret = modal.Secret.from_name(config.hf_secret_name)  # sets HF_TOKEN, which huggingface_hub reads itself
 app = modal.App(config.app_name)
 
 
@@ -44,7 +45,7 @@ def download_file(job: Job, file: RemoteFile) -> None:
         os.replace(destination + ".part", destination)
 
 
-@app.function(image=image, volumes={config.data_dir: volume}, cpu=4, memory=16384, timeout=3600, retries=modal.Retries(max_retries=6, initial_delay=30.0), max_containers=16)
+@app.function(image=image, volumes={config.data_dir: volume}, secrets=[hf_secret], cpu=4, memory=16384, timeout=3600, retries=modal.Retries(max_retries=6, initial_delay=30.0), max_containers=16)
 def fetch(job: Job) -> int:
     done = 0
     for file in job.files:
@@ -124,7 +125,7 @@ def download_heads() -> None:
         volume.commit()
 
 
-@app.function(image=image, volumes={config.data_dir: volume}, timeout=86400)
+@app.function(image=image, volumes={config.data_dir: volume}, secrets=[hf_secret], timeout=86400)
 def orchestrate():
     jobs = [job for source in config.sources for job in build_jobs(source)]
 

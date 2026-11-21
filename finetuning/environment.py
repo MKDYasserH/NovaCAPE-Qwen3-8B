@@ -3,7 +3,6 @@ import tomllib
 from pathlib import Path
 
 import modal
-import torch
 
 from schemas.training import StageSettings, TrainingConfig
 
@@ -45,14 +44,6 @@ def reload_volume() -> None:
 def commit_volume() -> None:
     if not IS_LOCAL:
         volume.commit()
-
-
-def pick_device() -> torch.device:
-    if torch.cuda.is_available():
-        return torch.device("cuda")
-    if torch.backends.mps.is_available():
-        return torch.device("mps")
-    return torch.device("cpu")
 
 
 def stage_settings[S: StageSettings](settings: S) -> S:
