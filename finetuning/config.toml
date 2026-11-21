@@ -1,5 +1,5 @@
 # "local": run on this machine with the data in [local].data_dir. "remote": full run on a Modal GPU.
-run_mode = "local"
+run_mode = "remote"
 app_name = "nova-train-heads"
 volume_name = "nova-data"
 data_dir = "/data"

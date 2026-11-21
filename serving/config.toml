@@ -1,0 +1,30 @@
+# Running the decision model. It runs wherever PyTorch does (serving/decision_model.py); serving/server.py is an
+# optional HTTP server on a Modal GPU. The Qwen3-8B revision comes from data/config.toml, the head sizes from
+# finetuning/config.toml and the CLM commit from evaluation/config.toml, so every part of the project agrees.
+
+[heads]
+hf_repo = "mkdyasserh/NovaCAPE-Qwen3-8B"  # the general post-trained checkpoint of the blog series
+hf_file = "best.pt"
+hf_revision = "c6b279ea5faff1d87aaaa7fabe344d144f44b041"  # sha256 50affcaf..., the file evaluated in the series
+
+[local]
+device = "auto"  # cuda, then mps (Apple GPU), then cpu
+dtype = "bfloat16"  # Qwen3-8B takes about 16.4 GB in bfloat16
+batch_size = 8
+max_tokens = 2048  # as in training
+
+[modal]
+app_name = "nova-serve"
+volume_name = "nova-data"  # created if missing; caches Qwen3-8B and the checkpoint
+data_dir = "/data"
+hf_secret_name = "huggingface"  # optional: delete this line if you have no Modal secret by this name
+hf_cache_dir = "hf-cache"
+gpu = "L40S"  # about 2 USD per hour while running
+scaledown_window_s = 300  # the GPU shuts down 5 minutes after the last request
+startup_timeout_s = 1500  # covers the first download of Qwen3-8B
+heads_port = 8700
+
+[modal.encoder]
+port = 8090
+gpu_memory_utilization = 0.6  # leaves room for the heads on the same GPU
+max_model_len = 2048

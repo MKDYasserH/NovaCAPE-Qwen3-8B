@@ -1,7 +1,8 @@
 # "local": small sample downloaded to this machine. "remote": full dataset on Modal.
-run_mode = "local"
+run_mode = "remote"
 app_name = "nova-data-loader"
 volume_name = "nova-data"
+hf_secret_name = "huggingface"  # Modal secret holding HF_TOKEN: modal secret create huggingface HF_TOKEN=...
 data_dir = "/data"
 log_every = 25
 

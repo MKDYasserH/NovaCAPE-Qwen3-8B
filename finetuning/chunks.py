@@ -27,16 +27,16 @@ class ChunkStore:
     def has_hard_negatives(self, chunk: ChunkId) -> bool:
         return self._file(self.negatives_dir, chunk, "n.npy").exists()
 
-    def read(self, chunk: ChunkId, with_hard_negatives: bool) -> PairArrays:
+    def read(self, chunk: ChunkId, with_hard_negatives: bool, *, mmap_mode: str | None = None) -> PairArrays:
         meta = pq.read_table(self._file(self.qa_dir, chunk, "meta.parquet"), columns=["doc_id"])
         pairs = PairArrays(
-            states=np.load(self._file(self.qa_dir, chunk, "q.npy")),
-            actions=np.load(self._file(self.qa_dir, chunk, "a.npy")),
+            states=np.load(self._file(self.qa_dir, chunk, "q.npy"), mmap_mode=mmap_mode),
+            actions=np.load(self._file(self.qa_dir, chunk, "a.npy"), mmap_mode=mmap_mode),
             doc_ids=hash_ids(meta.column("doc_id").to_pylist()),
         )
         if with_hard_negatives:
-            pairs.hard_negatives = np.load(self._file(self.negatives_dir, chunk, "n.npy"))
-            pairs.negative_counts = np.load(self._file(self.negatives_dir, chunk, "ncnt.npy"))
+            pairs.hard_negatives = np.load(self._file(self.negatives_dir, chunk, "n.npy"), mmap_mode=mmap_mode)
+            pairs.negative_counts = np.load(self._file(self.negatives_dir, chunk, "ncnt.npy"), mmap_mode=mmap_mode)
         return pairs
 
     @staticmethod

@@ -32,6 +32,7 @@ class EvaluationConfig(BaseModel):
     run_mode: Literal["local", "remote"]
     app_name: str
     volume_name: str
+    hf_secret_name: str
     data_dir: str
     runs_dir: str
     local: LocalSettings

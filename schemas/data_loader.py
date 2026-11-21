@@ -54,6 +54,7 @@ class Config(BaseModel):
     run_mode: Literal["local", "remote"]
     app_name: str
     volume_name: str
+    hf_secret_name: str
     data_dir: str
     log_every: int
     local: LocalSettings
