@@ -89,7 +89,9 @@ Settings for all three are in `serving/config.toml`: where the heads come from, 
 
 ## What was public, and what we rebuilt
 
-The [official repo](https://github.com/Contrastive-LM/CLM) has the serving engine, a fine-tuning script and the T-Rex game. It does not have the pre-training or mid-training code. We recovered those recipes from the settings stored inside the authors' public checkpoints ([jackyk02/qwen3_8b_head](https://huggingface.co/jackyk02/qwen3_8b_head)) and wrote our own trainer.
+The CLM team released the CLM-8B weights, described all three training stages, and published a trainer for fine-tuning the projection heads on new data, including DeepSWE traces. The official repository does not include the end-to-end scripts used to pre-train, mid-train and post-train the released CLM-8B checkpoint. [CLM release](https://github.com/Contrastive-LM/CLM/tree/d5f9ef0fd9bde185df0ceaad4f4ecc6cfe8c34f6) · [Fine-tuning script](https://github.com/Contrastive-LM/CLM/blob/d5f9ef0fd9bde185df0ceaad4f4ecc6cfe8c34f6/train/finetune.py)
+
+This project builds on Vizuara’s reconstruction and the settings stored in the authors’ checkpoints. The table below lists the training scripts and recipes used here. [Vizuara reconstruction](https://github.com/VizuaraAI/system-one-from-scratch) · [CLM head checkpoints](https://huggingface.co/jackyk02/qwen3_8b_head)
 
 | Stage | Data | Recipe | Script |
 |---|---|---|---|
